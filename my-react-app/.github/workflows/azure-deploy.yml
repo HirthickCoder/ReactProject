@@ -7,10 +7,10 @@ on:
   workflow_dispatch:
 
 env:
-  NODE_VERSION: '18.x'
+  PYTHON_VERSION: '3.11'
   AZURE_WEBAPP_NAME: 'd3restaurantapp'
   AZURE_WEBAPP_PACKAGE_PATH: '.'
-  NODE_ENV: 'production'
+  PYTHON_ENV: 'production'
 
 jobs:
   build-and-deploy:
@@ -20,17 +20,20 @@ jobs:
     - name: Checkout repository
       uses: actions/checkout@v4
 
-    - name: Setup Node.js
-      uses: actions/setup-node@v4
+    - name: Setup Python
+      uses: actions/setup-python@v4
       with:
-        node-version: ${{ env.NODE_VERSION }}
-        cache: 'npm'
+        python-version: ${{ env.PYTHON_VERSION }}
 
-    - name: Install dependencies
-      run: npm ci
+    - name: Install Python dependencies
+      run: |
+        cd backend
+        pip install -r requirements.txt
 
     - name: Build React app
-      run: npm run build
+      run: |
+        npm ci
+        npm run build
 
     - name: Start deployment to Azure Web App
       uses: azure/webapps-deploy@v3

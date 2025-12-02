@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Azure deployment script for D3 Restaurant App
+# Azure deployment script for D3 Restaurant App (Python FastAPI + React)
 
 # Variables
 RESOURCE_GROUP="d3restaurantapp-rg"
@@ -14,11 +14,11 @@ az group create --name $RESOURCE_GROUP --location $LOCATION
 echo "Creating App Service Plan..."
 az appservice plan create --name $APP_SERVICE_PLAN --resource-group $RESOURCE_GROUP --location $LOCATION --sku B1 --is-linux
 
-echo "Creating Web App..."
-az webapp create --resource-group $RESOURCE_GROUP --plan $APP_SERVICE_PLAN --name $WEB_APP_NAME --runtime "NODE|18-lts"
+echo "Creating Web App (Python FastAPI)..."
+az webapp create --resource-group $RESOURCE_GROUP --plan $APP_SERVICE_PLAN --name $WEB_APP_NAME --runtime "PYTHON|3.11"
 
 echo "Configuring Web App settings..."
-az webapp config appsettings set --resource-group $RESOURCE_GROUP --name $WEB_APP_NAME --settings WEBSITE_NODE_DEFAULT_VERSION=18.x NODE_ENV=production
+az webapp config appsettings set --resource-group $RESOURCE_GROUP --name $WEB_APP_NAME --settings SCM_DO_BUILD_DURING_DEPLOYMENT=true
 
 echo "Enabling CORS for Web App..."
 az webapp cors add --resource-group $RESOURCE_GROUP --name $WEB_APP_NAME --allowed-origins "https://d3restaurantapp.azurewebsites.net" --max-age 86400
