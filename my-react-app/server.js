@@ -4,11 +4,17 @@ import cors from 'cors';
 
 const app = express();
 
-// Enable CORS with specific origin
-app.use(cors({
-  origin: 'http://localhost:5173',
+// Configure CORS
+const corsOptions = {
+  origin: process.env.NODE_ENV === 'production' 
+    ? ['https://d3restaurantapp.azurewebsites.net', 'https://d3restaurantapp.azurestaticapps.net']
+    : ['http://localhost:5173', 'http://127.0.0.1:5173'],
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
   credentials: true
-}));
+};
+
+app.use(cors(corsOptions));
 
 app.use(express.json());
 
