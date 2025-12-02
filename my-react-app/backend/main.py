@@ -7,11 +7,15 @@ from pydantic import BaseModel, ConfigDict
 from typing import List, Optional
 from datetime import datetime
 import os
+import sys
+
+# Add current directory to path
+sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
 # Create database tables
 Base.metadata.create_all(bind=engine)
 
-app = FastAPI()
+app = FastAPI(title="D3 Restaurant API", version="1.0.0")
 
 # CORS middleware configuration
 app.add_middleware(
@@ -20,8 +24,8 @@ app.add_middleware(
         "http://localhost:5173",  # Vite default
         "http://localhost:3002",  # Your React URL
         "http://localhost:3000",  # Alternative port
-        "https://d3restaurantapp.azurewebsites.net",  # Your Azure app
-        "https://d3restaurantapp.azurestaticapps.net"  # Azure static apps
+        "https://urantsofficial.azurewebsites.net",  # Your Azure app
+        "https://*.azurewebsites.net"
     ],
     allow_credentials=True,
     allow_methods=["*"],
@@ -57,7 +61,11 @@ class MenuItemResponse(MenuItemBase):
 # Routes
 @app.get("/")
 def read_root():
-    return {"message": "Welcome to the Menu API"}
+    return {"message": "Welcome to D3 Restaurant API", "status": "running"}
+
+@app.get("/health")
+def health_check():
+    return {"status": "healthy", "service": "D3 Restaurant API"}
 
 @app.get("/api/menu/", response_model=List[MenuItemResponse])
 def get_menu_items(
@@ -66,7 +74,6 @@ def get_menu_items(
     limit: int = 100, 
     db: Session = Depends(get_db)
 ):
-    # Add cache control headers
     response.headers["Cache-Control"] = "no-cache, no-store, must-revalidate"
     response.headers["Pragma"] = "no-cache"
     response.headers["Expires"] = "0"
@@ -80,7 +87,6 @@ def get_menu_item(
     response: Response,
     db: Session = Depends(get_db)
 ):
-    # Add cache control headers
     response.headers["Cache-Control"] = "no-cache, no-store, must-revalidate"
     response.headers["Pragma"] = "no-cache"
     response.headers["Expires"] = "0"
@@ -95,14 +101,10 @@ def create_menu_item(
     item: MenuItemCreate, 
     db: Session = Depends(get_db)
 ):
-    # Create new menu item
     db_item = MenuItem(**item.dict())
-    
-    # Add to database
     db.add(db_item)
     db.commit()
     db.refresh(db_item)
-    
     return db_item
 
 @app.put("/api/menu/{item_id}", response_model=MenuItemResponse)
@@ -111,19 +113,15 @@ def update_menu_item(
     item: MenuItemCreate, 
     db: Session = Depends(get_db)
 ):
-    # Query the database for the item
     db_item = db.query(MenuItem).filter(MenuItem.id == item_id).first()
     
-    # If item not found, return 404
     if db_item is None:
         raise HTTPException(status_code=404, detail="Menu item not found")
     
-    # Update the item with new values
     update_data = item.dict(exclude_unset=True)
     for key, value in update_data.items():
         setattr(db_item, key, value)
     
-    # Save changes to database
     db.add(db_item)
     db.commit()
     db.refresh(db_item)
@@ -135,14 +133,11 @@ def delete_menu_item(
     item_id: int, 
     db: Session = Depends(get_db)
 ):
-    # Query the database for the item
     db_item = db.query(MenuItem).filter(MenuItem.id == item_id).first()
     
-    # If item not found, return 404
     if db_item is None:
         raise HTTPException(status_code=404, detail="Menu item not found")
     
-    # Delete the item
     db.delete(db_item)
     db.commit()
     
@@ -150,4 +145,5 @@ def delete_menu_item(
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=8000)
+    port = int(os.environ.get("PORT", 8000))
+    uvicorn.run(app, host="0.0.0.0", port=port)
