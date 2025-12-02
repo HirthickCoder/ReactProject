@@ -3,11 +3,8 @@
 
 echo "Starting FastAPI application..."
 
-# Install dependencies
-pip install -r backend/requirements.txt
-
-# Change to backend directory
-cd backend
+# Install dependencies first
+pip install fastapi uvicorn[standard] sqlalchemy psycopg2-binary python-multipart python-dotenv pydantic requests
 
 # Start FastAPI with uvicorn
-uvicorn main:app --host 0.0.0.0 --port $PORT
+python -m uvicorn main:app --host 0.0.0.0 --port $PORT
